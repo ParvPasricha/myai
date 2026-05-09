@@ -1,0 +1,52 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment — NEVER commit API keys
+.env
+.salt
+.verify
+
+# Tor — private key must never be committed
+.tor/hidden_service/private_key
+.tor/data/
+.tor/*.stderr
+.tor/tor.log
+
+# Runtime data — large/auto-generated
+memory/chromadb/
+memory/*.db
+memory/*.db-wal
+memory/*.db-shm
+memory/friend_tokens.json
+memory/zones.json
+logs/
+backups/
+models/
+yolo11n.pt
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode / iOS
+ios/ParvAI.xcodeproj/project.xcworkspace/
+ios/ParvAI.xcodeproj/xcuserdata/
+ios/DerivedData/
+*.xcuserstate
+
+# Next.js
+dashboard/frontend/.next/
+dashboard/frontend/node_modules/
+dashboard/frontend/.env.local
+
+# Prometheus storage
+/tmp/parv-ai-prometheus/
+
+# Claude Code
+.claude/
