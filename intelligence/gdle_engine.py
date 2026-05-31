@@ -62,11 +62,17 @@ async def _concept_map(llm, topic: str, depth: str, style: str, constraints: str
         return [l for l in lines if l][:8]
 
 
-async def _derive(llm, topic: str, subtopic: str, depth: str, style: str) -> str:
+async def _derive(llm, topic: str, subtopic: str, depth: str, style: str,
+                  prior_critique: str = "") -> str:
     depth_hint = _DEPTHS.get(depth, _DEPTHS["intermediate"])
     style_line = f"Style: {style}\n" if style else ""
+    critique_line = (
+        f"\nPrevious critique to address in this attempt:\n{prior_critique}\n"
+        if prior_critique else ""
+    )
     prompt = (
-        f"Context topic: {topic}\nSubtopic: {subtopic}\nDepth: {depth} — {depth_hint}\n{style_line}\n"
+        f"Context topic: {topic}\nSubtopic: {subtopic}\nDepth: {depth} — {depth_hint}\n"
+        f"{style_line}{critique_line}\n"
         f"Derive this subtopic from first principles using numbered steps. "
         f"Each step must build on the last. Start from the most basic assumption. "
         f"End at complete understanding. No vague gestures — be concrete."
@@ -188,6 +194,8 @@ async def run_gdle_session(
     # Phases 2–4: per subtopic, max 2 concurrent
     sem = asyncio.Semaphore(2)
     concepts: list[dict] = []
+    _PASS_THRESHOLD = 0.70
+    _MAX_RETRIES = 2
 
     async def _process(subtopic: str, idx: int) -> dict | None:
         concept_id = f"{session_id}_{idx}"
@@ -195,13 +203,29 @@ async def run_gdle_session(
             async with sem:
                 derivation = await _derive(llm, topic, subtopic, depth, style)
             async with sem:
-                probs = await _problems(llm, topic, subtopic, derivation, depth)
-            async with sem:
                 crit = await _critique(llm, subtopic, derivation)
 
             score = round(
                 crit["correctness"] * 0.4 + crit["clarity"] * 0.3 + crit["depth"] * 0.3, 3
             )
+
+            for attempt in range(_MAX_RETRIES):
+                if score >= _PASS_THRESHOLD:
+                    break
+                log.info("gdle_rederiving", subtopic=subtopic, attempt=attempt + 1, score=score)
+                async with sem:
+                    derivation = await _derive(
+                        llm, topic, subtopic, depth, style,
+                        prior_critique=crit.get("critique", ""),
+                    )
+                async with sem:
+                    crit = await _critique(llm, subtopic, derivation)
+                score = round(
+                    crit["correctness"] * 0.4 + crit["clarity"] * 0.3 + crit["depth"] * 0.3, 3
+                )
+
+            async with sem:
+                probs = await _problems(llm, topic, subtopic, derivation, depth)
             concept = {
                 "id":         concept_id,
                 "session_id": session_id,

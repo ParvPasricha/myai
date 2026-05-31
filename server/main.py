@@ -24,6 +24,9 @@ from server.routes.web_search import router as web_router
 from server.routes.dream import router as dream_router, broadcast_dream
 from server.routes.gdle import router as gdle_router
 from server.routes.observe import router as observe_router
+from server.routes.voice import router as voice_router
+from server.routes.agents_route import router as agents_router, broadcast_agents
+from server.routes.approval import router as approval_router
 from observability.logger import log
 from observability.metrics import (
     http_requests, http_latency,
@@ -116,12 +119,18 @@ async def lifespan(app: FastAPI):
     from intelligence.screen_monitor import run_screen_monitor
     screen_task = asyncio.create_task(run_screen_monitor())
 
+    # Jarvis proactive scheduler — speaks up when something needs attention
+    from intelligence.jarvis_core import run_proactive_scheduler
+    jarvis_task = asyncio.create_task(
+        run_proactive_scheduler(broadcast_fn=broadcast_agents)
+    )
+
     log.info("server_startup", service="parv-ai", version="0.5.0")
 
     yield
 
     tasks = [alert_task, deadman_task, backup_task, research_task,
-             distill_task, overwatcher_task, dream_task, screen_task]
+             distill_task, overwatcher_task, dream_task, screen_task, jarvis_task]
     for t in tasks:
         t.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)   # wait for clean exit
@@ -169,6 +178,9 @@ app.include_router(web_router)
 app.include_router(dream_router)
 app.include_router(gdle_router)
 app.include_router(observe_router)
+app.include_router(voice_router)
+app.include_router(agents_router)
+app.include_router(approval_router)
 
 # ── Request instrumentation middleware ────────────────────────────────────────
 @app.middleware("http")
