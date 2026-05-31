@@ -17,22 +17,36 @@ struct ParvAIApp: App {
 }
 
 struct MainTabView: View {
+    @AppStorage("serverToken") private var token: String = ""
+    @AppStorage("serverURL")   private var serverURL: String = "http://localhost:8000"
+
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem { Label("Home", systemImage: "house.fill") }
-            ChatView()
-                .tabItem { Label("Chat", systemImage: "mic.fill") }
-            ResearchView()
-                .tabItem { Label("Research", systemImage: "books.vertical.fill") }
-            StatusView()
-                .tabItem { Label("Status", systemImage: "heart.text.square.fill") }
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gear") }
+        ZStack(alignment: .bottom) {
+            TabView {
+                HomeView()
+                    .tabItem { Label("Home", systemImage: "house.fill") }
+                ChatView()
+                    .tabItem { Label("Chat", systemImage: "mic.fill") }
+                ResearchView()
+                    .tabItem { Label("Research", systemImage: "books.vertical.fill") }
+                StatusView()
+                    .tabItem { Label("Status", systemImage: "heart.text.square.fill") }
+                SettingsView()
+                    .tabItem { Label("Settings", systemImage: "gear") }
+            }
+
+            // Jarvis approval banner — floats over all tabs
+            ApprovalBanner()
         }
         .onAppear {
             ConnectionManager.shared.connectWebSocket()
             PingService.shared.start()
+
+            // Connect approval service so Jarvis can request send-on-behalf
+            let host = serverURL
+                .replacingOccurrences(of: "http://", with: "")
+                .replacingOccurrences(of: "https://", with: "")
+            ApprovalService.shared.connect(token: token, host: host)
         }
     }
 }

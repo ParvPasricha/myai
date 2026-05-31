@@ -17,8 +17,7 @@ class ResearchAgent(BaseAgent):
 
             # Web search via existing web_search route logic
             from intelligence.topic_researcher import research_topic
-            import asyncio
-            result = await asyncio.to_thread(research_topic, query)
+            result = await research_topic(query)
             summary = result.get("summary", result.get("content", ""))[:500] if result else ""
 
             if not summary:

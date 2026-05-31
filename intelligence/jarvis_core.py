@@ -98,17 +98,33 @@ def _build_situation() -> str:
         from memory.structured import get_active_goals
         goals = get_active_goals()
         if goals:
-            lines = [f"- {g.get('title', '')}" for g in goals[:4]]
+            lines = [f"- {g.get('title') or g.get('goal') or str(g)[:80]}" for g in goals[:4]]
             parts.append("[ACTIVE GOALS]\n" + "\n".join(lines))
     except Exception:
         pass
 
-    # System health stub — overwatcher fills this in when running
+    # Brain state — current cognitive/emotional snapshot
     try:
-        from intelligence.overwatcher import get_health_snapshot
-        health = get_health_snapshot()
-        if health:
-            parts.append(f"[SYSTEM HEALTH]\n{health}")
+        from intelligence.brain_state import get as get_brain_state
+        state = get_brain_state()
+        if state:
+            relevant = {k: v for k, v in state.items()
+                        if k in ("focus", "energy", "stress", "mood", "activity", "emotion")}
+            if relevant:
+                parts.append("[BRAIN STATE]\n" + ", ".join(f"{k}={v}" for k, v in relevant.items()))
+    except Exception:
+        pass
+
+    # System health — from overwatcher live graph
+    try:
+        from intelligence.overwatcher import get_graph
+        graph = get_graph()
+        services = graph.get("services", [])
+        if services:
+            down = [s["name"] for s in services if not s.get("healthy", True)]
+            up   = len(services) - len(down)
+            summary = f"{up} services healthy" + (f", {len(down)} down: {', '.join(down)}" if down else "")
+            parts.append(f"[SYSTEM HEALTH]\n{summary}")
     except Exception:
         pass
 
