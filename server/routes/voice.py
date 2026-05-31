@@ -9,7 +9,7 @@ WS   /ws/voice           — full-duplex: send audio frames, receive spoken resp
 import asyncio
 import json
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -44,10 +44,11 @@ async def speak(body: SpeakBody, _auth: dict = Depends(require_auth)):
 
 
 @router.post("/voice/transcribe")
-async def transcribe_audio(request_body: bytes = b"", _auth: dict = Depends(require_auth)):
+async def transcribe_audio(request: Request, _auth: dict = Depends(require_auth)):
     from fastapi import Request
     from intelligence.stt_engine import transcribe_async
-    transcript = await transcribe_async(request_body, fmt="wav")
+    audio_bytes = await request.body()
+    transcript  = await transcribe_async(audio_bytes, fmt="wav")
     return {"transcript": transcript}
 
 
