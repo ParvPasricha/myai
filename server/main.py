@@ -17,6 +17,13 @@ from server.routes.speech import router as speech_router
 from server.routes.vision import router as vision_router
 from server.routes.dashboard import router as dashboard_router, broadcast_state
 from server.routes.friends import router as friends_router
+from server.routes.intelligence import router as intelligence_router, broadcast_intelligence
+from server.routes.metrics_api import router as metrics_api_router
+from server.routes.assistant import router as assistant_router
+from server.routes.web_search import router as web_router
+from server.routes.dream import router as dream_router, broadcast_dream
+from server.routes.gdle import router as gdle_router
+from server.routes.observe import router as observe_router
 from observability.logger import log
 from observability.metrics import (
     http_requests, http_latency,
@@ -89,11 +96,32 @@ async def lifespan(app: FastAPI):
     from memory.distill import run_distillation_scheduler
     distill_task = asyncio.create_task(run_distillation_scheduler())
 
-    log.info("server_startup", service="parv-ai", version="0.2.0")
+    # Overwatcher — code graph + service health, polls every 30 s
+    from intelligence.overwatcher import run_overwatcher
+    from pathlib import Path
+    overwatcher_task = asyncio.create_task(
+        run_overwatcher(
+            Path(__file__).parent.parent,
+            broadcast_fn=broadcast_intelligence,
+        )
+    )
+
+    # Dream scheduler — nightly at 3am, manual via POST /dream/run
+    from intelligence.dream_scheduler import run_dream_scheduler
+    dream_task = asyncio.create_task(
+        run_dream_scheduler(broadcast_fn=broadcast_dream)
+    )
+
+    # Screen monitor — passive background observer every 30s
+    from intelligence.screen_monitor import run_screen_monitor
+    screen_task = asyncio.create_task(run_screen_monitor())
+
+    log.info("server_startup", service="parv-ai", version="0.5.0")
 
     yield
 
-    tasks = [alert_task, deadman_task, backup_task, research_task, distill_task]
+    tasks = [alert_task, deadman_task, backup_task, research_task,
+             distill_task, overwatcher_task, dream_task, screen_task]
     for t in tasks:
         t.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)   # wait for clean exit
@@ -134,6 +162,13 @@ app.include_router(speech_router)
 app.include_router(vision_router)
 app.include_router(dashboard_router)
 app.include_router(friends_router)
+app.include_router(intelligence_router)
+app.include_router(metrics_api_router)
+app.include_router(assistant_router)
+app.include_router(web_router)
+app.include_router(dream_router)
+app.include_router(gdle_router)
+app.include_router(observe_router)
 
 # ── Request instrumentation middleware ────────────────────────────────────────
 @app.middleware("http")
@@ -149,6 +184,37 @@ async def instrument(request: Request, call_next):
     log.info("http_request", method=method, path=path, status=status,
              latency_ms=round(latency * 1000))
     return response
+
+
+# ── Web search helpers ────────────────────────────────────────────────────────
+_WEB_TRIGGERS = {
+    "latest", "current", "today", "right now", "news", "recently",
+    "this week", "2026", "what happened", "who won", "price of",
+    "stock", "weather", "trending", "just released", "announced",
+    "update", "new version", "breaking",
+}
+
+def _needs_web_search(text: str) -> bool:
+    lower = text.lower()
+    return any(t in lower for t in _WEB_TRIGGERS)
+
+
+async def _web_context(query: str) -> str:
+    """Search web and return a short context block to inject into the prompt."""
+    try:
+        from server.routes.web_search import _ddg_search, _scrape
+        results = await asyncio.to_thread(_ddg_search, query, 3)
+        if not results:
+            return ""
+        # Scrape top result for full text
+        top_text = await asyncio.to_thread(_scrape, results[0]["url"])
+        lines = [f"[WEB — {r['title']}] {r['body'][:300]}" for r in results]
+        if top_text:
+            lines[0] = f"[WEB — {results[0]['title']}]\n{top_text[:1000]}"
+        return "\n\n".join(lines)
+    except Exception as e:
+        log.warn("web_context_failed", error=str(e))
+        return ""
 
 
 # ── Background speech analysis ───────────────────────────────────────────────
@@ -203,7 +269,7 @@ async def chat(body: dict, _auth: dict = Depends(require_auth)):
     from memory.context_builder import build_system_prompt
 
     prompt = body.get("prompt", "")
-    base_system = body.get("system", "You are PARV-AI, a personal AI assistant.")
+    base_system = body.get("system", "")
     session_id = body.get("session_id") or working.current_session()
     if not prompt:
         raise HTTPException(status_code=422, detail="prompt is required")
@@ -218,6 +284,12 @@ async def chat(body: dict, _auth: dict = Depends(require_auth)):
 
     # Build context-enriched system prompt
     system = build_system_prompt(prompt, session_id, base_system)
+
+    # Auto-inject live web results for queries that need current info
+    if _needs_web_search(prompt):
+        web_ctx = await _web_context(prompt)
+        if web_ctx:
+            system += f"\n\n[LIVE WEB RESULTS]\n{web_ctx}"
 
     from observability.metrics import llm_latency, llm_requests
     t0 = _time.time()
@@ -234,6 +306,10 @@ async def chat(body: dict, _auth: dict = Depends(require_auth)):
         response_text = result["text"]
         episodic.log_message(session_id, "assistant", response_text)
         working.append_message(session_id, "assistant", response_text)
+
+        # Auto-learn from this conversation turn (background, non-blocking)
+        from intelligence.learning_engine import learn_from_conversation
+        _spawn(learn_from_conversation(session_id, prompt, response_text))
 
         mqtt_publish("parv/ai/response", response_text[:200])
         return {**result, "session_id": session_id}

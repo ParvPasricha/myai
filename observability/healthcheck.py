@@ -57,25 +57,40 @@ async def _check_brain_state() -> dict[str, Any]:
         return {"status": "down", "error": str(e)}
 
 
+def _check_postgres() -> dict[str, Any]:
+    t0 = time.time()
+    try:
+        from db.postgres import ping, _USING_POSTGRES  # type: ignore[attr-defined]
+        from memory.structured import using_postgres
+        if not using_postgres():
+            return {"status": "not_configured"}
+        ok = ping()
+        latency_ms = round((time.time() - t0) * 1000)
+        return {"status": "ok", "latency_ms": latency_ms} if ok else {"status": "down"}
+    except Exception as e:
+        return {"status": "down", "error": str(e)}
+
+
 async def full_health(mqtt_connected: bool = False) -> dict[str, Any]:
-    redis_result, ollama_result, mqtt_result, brain_result = await asyncio.gather(
+    redis_result, ollama_result, mqtt_result, brain_result, pg_result = await asyncio.gather(
         _check_redis(),
         _check_ollama(),
         _check_mqtt(mqtt_connected),
         _check_brain_state(),
+        asyncio.to_thread(_check_postgres),
     )
 
     subsystems = {
-        "redis": redis_result,
-        "ollama": ollama_result,
-        "mqtt": mqtt_result,
+        "redis":      redis_result,
+        "ollama":     ollama_result,
+        "mqtt":       mqtt_result,
         "brain_state": brain_result,
-        "postgres": {"status": "not_configured"},   # wired in Phase 5
+        "postgres":   pg_result,
     }
 
     overall = "ok"
     for name, result in subsystems.items():
-        if result["status"] == "down" and name not in ("postgres", "ollama"):
+        if result["status"] == "down" and name not in ("ollama",):
             overall = "degraded"
             break
 

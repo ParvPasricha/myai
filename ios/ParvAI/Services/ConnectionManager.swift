@@ -73,20 +73,27 @@ final class ConnectionManager: ObservableObject {
     // MARK: — Auth
 
     func authenticate() async -> Bool {
-        // Phase 3: dev token endpoint; replaced by Face ID → JWT in FaceIDAuth
         guard let url = URL(string: config.serverURL + "/auth/token") else { return false }
         do {
-            var req = URLRequest(url: url)
+            var req = URLRequest(url: url, timeoutInterval: 8)
             req.httpMethod = "POST"
-            let (data, _) = try await URLSession.shared.data(for: req)
+            let (data, response) = try await URLSession.shared.data(for: req)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                lastError = "Server returned an error. Check that PARV-AI is running."
+                return false
+            }
             let json = try JSONDecoder().decode([String: String].self, from: data)
             token = json["access_token"]
             isConnected = true
             return true
         } catch {
-            lastError = error.localizedDescription
+            lastError = "Cannot reach server at \(config.serverURL). Is it running?"
             return false
         }
+    }
+
+    var isServerLocalhost: Bool {
+        config.serverURL.contains("localhost") || config.serverURL.contains("127.0.0.1")
     }
 
     func setToken(_ t: String) {

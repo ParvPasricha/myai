@@ -104,6 +104,28 @@ async def add_goal(body: GoalBody, _auth: dict = Depends(require_auth)):
 async def get_goals(_auth: dict = Depends(require_auth)):
     return {"goals": structured.get_active_goals()}
 
+@router.delete("/memory/goal/{goal_id}")
+async def delete_goal(goal_id: int, _auth: dict = Depends(require_auth)):
+    with structured._conn() as c:
+        deleted = c.execute(
+            "DELETE FROM goals WHERE id = ?", (goal_id,)
+        ).rowcount
+    return {"ok": deleted > 0, "deleted_id": goal_id}
+
+@router.delete("/memory/goals")
+async def delete_all_goals(_auth: dict = Depends(require_auth)):
+    with structured._conn() as c:
+        count = c.execute("DELETE FROM goals").rowcount
+    return {"ok": True, "deleted": count}
+
+@router.patch("/memory/goal/{goal_id}/complete")
+async def complete_goal(goal_id: int, _auth: dict = Depends(require_auth)):
+    with structured._conn() as c:
+        updated = c.execute(
+            "UPDATE goals SET completed = 1 WHERE id = ?", (goal_id,)
+        ).rowcount
+    return {"ok": updated > 0, "goal_id": goal_id}
+
 
 @router.get("/memory/item")
 async def find_item(q: str = Query(..., min_length=1),

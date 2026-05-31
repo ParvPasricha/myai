@@ -149,3 +149,88 @@ async def remove_domain(domain: str, _auth: dict = Depends(require_auth)):
     with _conn() as c:
         c.execute("UPDATE user_domains SET active = 0 WHERE domain = ?", (domain,))
     return {"ok": True}
+
+
+# ── Personalised suggestions ───────────────────────────────────────────────────
+
+@router.get("/research/suggestions")
+async def topic_suggestions(_auth: dict = Depends(require_auth)):
+    """
+    5 personalised topic suggestions built from unified memory + quiz history.
+    Mix of: revisit weak areas, deepen known domains, explore new territory.
+    """
+    import json as _json
+    from intelligence.learning_engine import get_domain_summary
+    from research.db import get_weak_areas, get_recent_topics
+
+    domain_counts = await asyncio.to_thread(get_domain_summary)
+    weak         = get_weak_areas(3)
+    recent       = [r["topic"] for r in get_recent_topics(7)]
+    domains      = get_active_domains()
+    top_domains  = sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)[:4]
+
+    system = "Return ONLY valid JSON. No markdown."
+    prompt = (
+        f"User's top interest domains (from AI memory): {[d for d, _ in top_domains]}.\n"
+        f"Active research domains: {domains}.\n"
+        f"Recent topics (avoid repeating): {recent}.\n"
+        f"Weak quiz areas to revisit: {[w['topic'] for w in weak]}.\n\n"
+        "Generate 6 topic suggestions. Mix: 2 that deepen known strengths, "
+        "2 that revisit weak areas, 2 that explore completely new territory.\n"
+        '{"suggestions": [{'
+        '"topic": "specific topic name", '
+        '"description": "1 sentence on why this matters to them", '
+        '"domain": "code|physics|maths|business|editing|personal", '
+        '"type": "deepen|revisit|explore"'
+        "}]}"
+    )
+
+    try:
+        raw = await llm.complete(prompt=prompt, system=system, max_tokens=600)
+        text = raw["text"].strip().lstrip("```json").lstrip("```").rstrip("```")
+        data = _json.loads(text[text.find("{"):text.rfind("}") + 1])
+        suggestions = data.get("suggestions", [])[:6]
+    except Exception as e:
+        log.warn("suggestions_failed", error=str(e))
+        suggestions = [
+            {"topic": d, "description": f"Deepen your {d} knowledge",
+             "domain": d, "type": "deepen"}
+            for d in (domains or ["code", "maths"])[:6]
+        ]
+
+    return {"suggestions": suggestions}
+
+
+class CustomTopicBody(BaseModel):
+    topic: str
+
+@router.post("/research/topic/custom")
+async def set_custom_topic(body: CustomTopicBody, _auth: dict = Depends(require_auth)):
+    """Set a custom research topic for today, overriding the AI-generated one."""
+    today = date.today().isoformat()
+    system = "Return ONLY valid JSON. No markdown."
+    prompt = (
+        f"Write a focused 3-sentence research brief for the topic: '{body.topic}'.\n"
+        '{"description": "...", "domains": ["primary", "optional secondary"]}'
+    )
+    try:
+        raw = await llm.complete(prompt=prompt, system=system, max_tokens=200)
+        text = raw["text"].strip()
+        data = _json.loads(text[text.find("{"):text.rfind("}") + 1])
+        desc    = data.get("description", f"Research everything about {body.topic}.")
+        domains = data.get("domains", ["general"])
+    except Exception:
+        desc    = f"Deep research on: {body.topic}."
+        domains = ["general"]
+
+    from research.db import save_topic, _conn
+    with _conn() as c:
+        c.execute("DELETE FROM topics WHERE date = ?", (today,))
+    save_topic(date=today, topic=body.topic, description=desc,
+               domains=domains, ts=time.time())
+    topic = get_today_topic(today)
+    import json as _json2
+    return {**topic, "domains": _json2.loads(topic["domains"])}
+
+
+import asyncio

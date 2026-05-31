@@ -6,11 +6,6 @@ options:
   xcodeVersion: "16"
   createIntermediateGroups: true
 
-packages:
-  WhisperKit:
-    url: https://github.com/argmaxinc/WhisperKit
-    from: 0.9.0
-
 targets:
   ParvAI:
     type: application
@@ -18,16 +13,27 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - path: ParvAI
-    resources:
-      - path: ParvAI/Resources/Info.plist
+        excludes:
+          - Resources/Info.plist
     entitlements:
       path: ParvAI/Resources/ParvAI.entitlements
     info:
       path: ParvAI/Resources/Info.plist
+      properties:
+        NSFaceIDUsageDescription: "ParvAI uses Face ID to authenticate you with your personal AI brain."
+        NSMicrophoneUsageDescription: "ParvAI uses the microphone for push-to-talk voice input to your personal AI."
+        NSSpeechRecognitionUsageDescription: "ParvAI transcribes your voice on-device to send commands to your AI brain."
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoads: true
+        UIBackgroundModes:
+          - fetch
+          - processing
+        UILaunchScreen: {}
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.parv.parvai
       SWIFT_VERSION: "5.9"
       DEVELOPMENT_TEAM: ""        # fill in your Apple Team ID
       CODE_SIGN_STYLE: Automatic
-    dependencies:
-      - package: WhisperKit
+      GENERATE_INFOPLIST_FILE: NO
+      SWIFT_COMPILATION_MODE: singlefile

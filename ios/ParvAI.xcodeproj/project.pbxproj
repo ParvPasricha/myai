@@ -1,0 +1,395 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0DF54E7D2CC0F63198FB8B32 /* BrainState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F73D7A3A8CE2B8F5A1D400 /* BrainState.swift */; };
+		11DB935BBC57458F62F63153 /* ParvAIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB1ECA94B826DABF897F89E /* ParvAIApp.swift */; };
+		218D6A160D1BDDCB7FCBE5FE /* FaceIDAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE28A885DBB0626DEBE12F37 /* FaceIDAuth.swift */; };
+		24F9F717CBE04912E314417D /* StatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 562D74ED153C6B950EA0E82D /* StatusView.swift */; };
+		2DCF0DC4D22E6E0C18828C08 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3FC903E9B13C3C3539314F /* ChatMessage.swift */; };
+		2F656D017AF4C5181F0B4FFA /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3A99516F80CA90FD0C217A /* AppConfig.swift */; };
+		3C733FE9065CA1FB39122C9E /* ResearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585B67156C7D01EB701AB0EF /* ResearchView.swift */; };
+		77277D3F8B16077E5276092F /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FB53244EEA1D61B1C07EE20 /* HomeView.swift */; };
+		8508A306584C9A7C71D20735 /* ConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC494516CDC5C5D50E0D483F /* ConnectionManager.swift */; };
+		8A3D62A2347FB4163D2AE3CC /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025B10F27365783D5A4CBC39 /* AudioService.swift */; };
+		A9B21E8046F7826847352178 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F202C43D9FAEDEC1BE6A953F /* SettingsView.swift */; };
+		CB35D421A911BBC607CBD0F9 /* PingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2A414ABF5E58A68C383026 /* PingService.swift */; };
+		D98ACD62810012653B86537F /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D805C439A2C2B925064B6D4 /* ChatView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		025B10F27365783D5A4CBC39 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		0FB53244EEA1D61B1C07EE20 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		1B3FC903E9B13C3C3539314F /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		1D805C439A2C2B925064B6D4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		3D571681290901516717B4BA /* ParvAI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ParvAI.entitlements; sourceTree = "<group>"; };
+		4EB1ECA94B826DABF897F89E /* ParvAIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParvAIApp.swift; sourceTree = "<group>"; };
+		562D74ED153C6B950EA0E82D /* StatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusView.swift; sourceTree = "<group>"; };
+		585B67156C7D01EB701AB0EF /* ResearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchView.swift; sourceTree = "<group>"; };
+		5E3A99516F80CA90FD0C217A /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		7F2A414ABF5E58A68C383026 /* PingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingService.swift; sourceTree = "<group>"; };
+		A4A454F194C3D4AA1D4DC82B /* ParvAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ParvAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5F73D7A3A8CE2B8F5A1D400 /* BrainState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainState.swift; sourceTree = "<group>"; };
+		DE28A885DBB0626DEBE12F37 /* FaceIDAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceIDAuth.swift; sourceTree = "<group>"; };
+		EC494516CDC5C5D50E0D483F /* ConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionManager.swift; sourceTree = "<group>"; };
+		F202C43D9FAEDEC1BE6A953F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		11D13A3443F47810970CDF45 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				DE28A885DBB0626DEBE12F37 /* FaceIDAuth.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		1629C34AE98F64DDD8933955 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				3D571681290901516717B4BA /* ParvAI.entitlements */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		288F417109022CB111F5F7E5 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5E3A99516F80CA90FD0C217A /* AppConfig.swift */,
+				A5F73D7A3A8CE2B8F5A1D400 /* BrainState.swift */,
+				1B3FC903E9B13C3C3539314F /* ChatMessage.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		56AB82D5A2A36AEDA583999A /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				025B10F27365783D5A4CBC39 /* AudioService.swift */,
+				EC494516CDC5C5D50E0D483F /* ConnectionManager.swift */,
+				7F2A414ABF5E58A68C383026 /* PingService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		66167BDED075C82C2242C78E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A4A454F194C3D4AA1D4DC82B /* ParvAI.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		838088785F917F103C929C8D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				4EB1ECA94B826DABF897F89E /* ParvAIApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A08F8300F993FC5819AF7897 = {
+			isa = PBXGroup;
+			children = (
+				EB4782E21991B9BAEBCBE39D /* ParvAI */,
+				66167BDED075C82C2242C78E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AE54E9CB56B47F3CA9366557 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1D805C439A2C2B925064B6D4 /* ChatView.swift */,
+				0FB53244EEA1D61B1C07EE20 /* HomeView.swift */,
+				585B67156C7D01EB701AB0EF /* ResearchView.swift */,
+				F202C43D9FAEDEC1BE6A953F /* SettingsView.swift */,
+				562D74ED153C6B950EA0E82D /* StatusView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		EB4782E21991B9BAEBCBE39D /* ParvAI */ = {
+			isa = PBXGroup;
+			children = (
+				838088785F917F103C929C8D /* App */,
+				11D13A3443F47810970CDF45 /* Auth */,
+				288F417109022CB111F5F7E5 /* Models */,
+				1629C34AE98F64DDD8933955 /* Resources */,
+				56AB82D5A2A36AEDA583999A /* Services */,
+				AE54E9CB56B47F3CA9366557 /* Views */,
+			);
+			path = ParvAI;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B4502A8462F0D8B9193D9D51 /* ParvAI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 04E8459C6692EA5F6D54CDCB /* Build configuration list for PBXNativeTarget "ParvAI" */;
+			buildPhases = (
+				D69D1D8FE4A6B4F694CDB812 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ParvAI;
+			packageProductDependencies = (
+			);
+			productName = ParvAI;
+			productReference = A4A454F194C3D4AA1D4DC82B /* ParvAI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		43D8D8A1F0B3C8A4CB318F44 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					B4502A8462F0D8B9193D9D51 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 12942DD9ACE402F42C616462 /* Build configuration list for PBXProject "ParvAI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A08F8300F993FC5819AF7897;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 66167BDED075C82C2242C78E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B4502A8462F0D8B9193D9D51 /* ParvAI */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D69D1D8FE4A6B4F694CDB812 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F656D017AF4C5181F0B4FFA /* AppConfig.swift in Sources */,
+				8A3D62A2347FB4163D2AE3CC /* AudioService.swift in Sources */,
+				0DF54E7D2CC0F63198FB8B32 /* BrainState.swift in Sources */,
+				2DCF0DC4D22E6E0C18828C08 /* ChatMessage.swift in Sources */,
+				D98ACD62810012653B86537F /* ChatView.swift in Sources */,
+				8508A306584C9A7C71D20735 /* ConnectionManager.swift in Sources */,
+				218D6A160D1BDDCB7FCBE5FE /* FaceIDAuth.swift in Sources */,
+				77277D3F8B16077E5276092F /* HomeView.swift in Sources */,
+				11DB935BBC57458F62F63153 /* ParvAIApp.swift in Sources */,
+				CB35D421A911BBC607CBD0F9 /* PingService.swift in Sources */,
+				3C733FE9065CA1FB39122C9E /* ResearchView.swift in Sources */,
+				A9B21E8046F7826847352178 /* SettingsView.swift in Sources */,
+				24F9F717CBE04912E314417D /* StatusView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		25A845E42E34291483E6A4B7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ParvAI/Resources/ParvAI.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = PTQ8PZB5T8;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvAI/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parv.parvai;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7C11878481DDD48BED35B08A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = ParvAI/Resources/ParvAI.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvAI/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parv.parvai;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = singlefile;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C1A04401633BE82599659D4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D1BAEF5D9DD41E0C523903B0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		04E8459C6692EA5F6D54CDCB /* Build configuration list for PBXNativeTarget "ParvAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25A845E42E34291483E6A4B7 /* Debug */,
+				7C11878481DDD48BED35B08A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		12942DD9ACE402F42C616462 /* Build configuration list for PBXProject "ParvAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1BAEF5D9DD41E0C523903B0 /* Debug */,
+				C1A04401633BE82599659D4D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 43D8D8A1F0B3C8A4CB318F44 /* Project object */;
+}
