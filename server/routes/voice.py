@@ -1,8 +1,8 @@
 """
 Voice routes — Jarvis speaks and listens.
 
-POST /voice/speak        — text → Jarvis speaks on Mac + returns AIFF bytes
-POST /voice/transcribe   — audio bytes → Whisper transcript
+POST /voice/speak        — text → Jarvis speaks on Mac + returns MP3 bytes
+POST /voice/transcribe   — audio bytes → Whisper transcript (local faster-whisper)
 POST /voice/ask          — full pipeline: audio in → Jarvis thinks → speaks + returns text
 WS   /ws/voice           — full-duplex: send audio frames, receive spoken responses
 """
@@ -38,7 +38,7 @@ async def speak(body: SpeakBody, _auth: dict = Depends(require_auth)):
 
     return Response(
         content=audio,
-        media_type="audio/aiff",
+        media_type="audio/mpeg",
         headers={"X-Text-Length": str(len(body.text))},
     )
 

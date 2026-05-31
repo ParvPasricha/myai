@@ -25,6 +25,7 @@ from server.routes.dream import router as dream_router, broadcast_dream
 from server.routes.gdle import router as gdle_router
 from server.routes.observe import router as observe_router
 from server.routes.voice import router as voice_router
+from server.routes.voice_editor import router as voice_editor_router
 from server.routes.agents_route import router as agents_router, broadcast_agents
 from server.routes.approval import router as approval_router
 from observability.logger import log
@@ -179,6 +180,7 @@ app.include_router(dream_router)
 app.include_router(gdle_router)
 app.include_router(observe_router)
 app.include_router(voice_router)
+app.include_router(voice_editor_router)
 app.include_router(agents_router)
 app.include_router(approval_router)
 

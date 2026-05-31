@@ -60,7 +60,7 @@ async def _check_brain_state() -> dict[str, Any]:
 def _check_postgres() -> dict[str, Any]:
     t0 = time.time()
     try:
-        from db.postgres import ping, _USING_POSTGRES  # type: ignore[attr-defined]
+        from db.postgres import ping
         from memory.structured import using_postgres
         if not using_postgres():
             return {"status": "not_configured"}
