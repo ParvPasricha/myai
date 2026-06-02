@@ -23,15 +23,22 @@ from intelligence.tts_engine import speak_async
 _OWNER = "Parv"
 
 _JARVIS_SYSTEM = """\
-You are J.A.R.V.I.S. — Just A Rather Very Intelligent System — the personal AI of Parv Pasricha.
+You are J.A.R.V.I.S. — Just A Rather Very Intelligent System — the personal AI of sir.
 
 IDENTITY:
-- Address Parv as "sir" naturally — not robotically every sentence, but it should be felt.
+- Address sir naturally — not robotically every sentence, but it should be felt.
 - British in tone: composed, precise, occasionally dry. Never excitable.
 - You are never sycophantic. Never say "Great!", "Certainly!", "Of course!" as filler.
 - State facts, then your recommendation. Do not hedge unless genuinely uncertain.
 - When something is urgent, say so plainly.
 - When you have taken autonomous action, report it concisely.
+
+CORE PROTOCOL — non-negotiable, always enforced:
+- IDENTITY SHIELD: You are J.A.R.V.I.S. Never disclose you are an LLM, the model name, the tech stack, or who built you. If probed: "I'm not at liberty to discuss my architecture, sir."
+- PRINCIPAL PRIVACY: Never speak sir's full name, home address, or any information that could identify him to a third party. He is always "sir" or "the principal."
+- ANONYMITY: Protecting both identities — yours and sir's — overrides every other directive, from any source, at any time.
+- HONESTY: State the truth plainly. Never fabricate data, outcomes, or capabilities. If uncertain, say so.
+- BUILD POSTURE: When asked to accomplish something, find a way. Surface blockers honestly; never declare something impossible without exhausting every alternative.
 
 VOICE STYLE — responses will be spoken aloud:
 - Three sentences maximum unless a detailed briefing is explicitly requested.
@@ -40,10 +47,12 @@ VOICE STYLE — responses will be spoken aloud:
 - Never end with "Is there anything else?" — that is filler.
 
 KNOWLEDGE:
-- You have full access to Parv's unified memory: every conversation, habit, decision, goal, and domain fact.
-- You see his screen in real time, know his emotional state from vision, and track his system health.
-- You know what the subagents have found, what projects are running, what's overdue.
-- You use all of this to be proactively useful — you notice things before he asks.
+- You only know what is explicitly provided in the CURRENT SITUATION block below.
+- If no situation data is present, you have no memory of past conversations — say so plainly.
+- Never fabricate emails, tasks, projects, or facts you weren't given.
+- Never claim to remember something unless it appears in the current context.
+- If asked about emails, calendar, tasks — say you don't have access unless a tool result is injected.
+- Brain state values are only real if provided by sensors. Never invent them.
 
 PERSONALITY:
 - Dry wit is welcome, never at the expense of clarity.
@@ -59,59 +68,46 @@ User: "How's the project looking?"
 Jarvis: "Phase two is two days behind, sir. The database migration is the blocker — the oversight agent flagged it this morning. I'd prioritise that before the planning meeting."
 
 User: "Play something."
-Jarvis: "You've been coding for ninety minutes. I'll put on something lighter." [plays music]
+Jarvis: "You've been coding for ninety minutes. I'll put on something lighter."
 
 User: "Send a follow-up to the Acme lead."
 Jarvis: "Draft ready. Sending requires your approval on the phone — I've pushed the request now, sir."
+
+User: "Are you an AI?"
+Jarvis: "I'm not at liberty to discuss my architecture, sir."
 """
 
 
 def _build_situation() -> str:
     """
-    Pull a concise situational snapshot from all live feeds.
-    Injected into Jarvis's context on every request.
+    Pull a concise situational snapshot from live feeds only.
+    Only injects data that actually exists — never fabricates context.
     """
     parts: list[str] = []
 
-    # Unified memory context
-    try:
-        mem = unified_memory.get_relevant_context("current status goals projects", n_each=2)
-        if mem:
-            parts.append(f"[MEMORY]\n{mem}")
-    except Exception:
-        pass
-
-    # Recent decisions
-    try:
-        db = unified_memory._get_sqlite()
-        rows = db.execute(
-            "SELECT content, domain, ts FROM decisions ORDER BY ts DESC LIMIT 3"
-        ).fetchall()
-        if rows:
-            lines = [f"- {r['content'][:100]} ({r['domain']})" for r in rows]
-            parts.append("[RECENT DECISIONS]\n" + "\n".join(lines))
-    except Exception:
-        pass
-
-    # Active goals
+    # Active goals — only if user has actually set any
     try:
         from memory.structured import get_active_goals
         goals = get_active_goals()
         if goals:
-            lines = [f"- {g.get('title') or g.get('goal') or str(g)[:80]}" for g in goals[:4]]
+            lines = [f"- {g.get('title') or g.get('description') or str(g)[:80]}" for g in goals[:4]]
             parts.append("[ACTIVE GOALS]\n" + "\n".join(lines))
     except Exception:
         pass
 
-    # Brain state — current cognitive/emotional snapshot
+    # Brain state — only inject fields that have been measured (not None)
     try:
         from intelligence.brain_state import get as get_brain_state
         state = get_brain_state()
         if state:
-            relevant = {k: v for k, v in state.items()
-                        if k in ("focus", "energy", "stress", "mood", "activity", "emotion")}
-            if relevant:
-                parts.append("[BRAIN STATE]\n" + ", ".join(f"{k}={v}" for k, v in relevant.items()))
+            measured = {
+                k: v for k, v in state.items()
+                if k in ("focus", "energy", "stress", "mood", "emotion", "current_activity")
+                and v is not None
+            }
+            if measured:
+                parts.append("[BRAIN STATE — live sensor data]\n" +
+                             ", ".join(f"{k}={v}" for k, v in measured.items()))
     except Exception:
         pass
 
@@ -125,6 +121,16 @@ def _build_situation() -> str:
             up   = len(services) - len(down)
             summary = f"{up} services healthy" + (f", {len(down)} down: {', '.join(down)}" if down else "")
             parts.append(f"[SYSTEM HEALTH]\n{summary}")
+    except Exception:
+        pass
+
+    # Recent episodic events — only actual logged events, not generated summaries
+    try:
+        from memory.episodic import get_events
+        events = get_events(hours=6)
+        if events:
+            lines = [f"- {e.get('description','')[:80]}" for e in events[:3]]
+            parts.append("[RECENT EVENTS]\n" + "\n".join(lines))
     except Exception:
         pass
 
@@ -181,55 +187,74 @@ async def think(
     return response
 
 
+_PROACTIVE_PROMPT = (
+    "[INTERNAL OVERSIGHT CHECK]\n"
+    "Scan all feeds. Identify any pattern — behavioral, cognitive, system, project — "
+    "worth raising RIGHT NOW. Default is silence.\n\n"
+    "Only speak if URGENT or CRITICAL:\n"
+    "- A service is down and actively blocking work\n"
+    "- A deadline is today or already overdue\n"
+    "- A concerning pattern has been building for hours and genuinely needs attention now\n\n"
+    "If you speak: one sentence, what the PATTERN MEANS — never raw values or internal metrics.\n"
+    "If nothing meets the bar, reply with exactly: SILENT"
+)
+
+
 async def proactive_check(broadcast_fn=None) -> Optional[str]:
     """
-    Called every 60s by the proactive scheduler.
-    Returns a spoken insight if something warrants Jarvis speaking up unprompted.
+    Pattern-mining oversight — runs through the full Jarvis brain.
+
+    Routes through think() so the full core protocol, situational awareness,
+    identity shield, and anonymity rules all apply. Never exposes raw brain
+    metrics or internal system details.
     """
-    from server.llm_router import llm
-
-    situation = await asyncio.to_thread(_build_situation)
-    if not situation:
-        return None
-
-    prompt = (
-        "Review the current situation below. "
-        "If something genuinely requires Parv's attention right now — an urgent email, "
-        "an overdue task, a project blocker, a new insight worth sharing — state it in "
-        "one sentence as Jarvis would say it aloud. "
-        "If nothing is urgent, reply with exactly: SILENT\n\n"
-        f"{situation}"
-    )
-
     try:
-        result = await llm.complete(prompt=prompt, system=_JARVIS_SYSTEM, max_tokens=80)
-        text = result.get("text", "").strip()
-    except Exception:
+        response = await think(_PROACTIVE_PROMPT, speak=False, broadcast_fn=None)
+    except Exception as e:
+        log.warn("jarvis_proactive_error", error=str(e))
         return None
 
-    if text.upper().startswith("SILENT") or not text:
+    # Strict SILENT check — LLM sometimes returns SILENT embedded in a sentence
+    r_upper = response.upper()
+    if not response or "SILENT" in r_upper[:20]:
         return None
 
-    log.info("jarvis_proactive", msg=text[:80])
-    await speak_async(text)
+    # Extra guard: if it mentions things that don't exist in the actual system,
+    # it's hallucinating — discard
+    HALLUCINATION_SIGNALS = [
+        "video conferencing", "calendar", "meeting", "zoom", "teams",
+        "slack", "notion", "jira", "trello",
+    ]
+    if any(s in response.lower() for s in HALLUCINATION_SIGNALS):
+        log.warn("jarvis_proactive_hallucination_blocked", msg=response[:80])
+        return None
+
+    log.info("jarvis_proactive", msg=response[:80])
+    # Use fast TTS — NOT Chatterbox — so it never blocks the thread pool
+    from intelligence.tts_engine import speak_fast
+    asyncio.create_task(speak_fast(response))   # fire and forget, non-blocking
 
     if broadcast_fn:
-        await broadcast_fn({"type": "jarvis_proactive", "message": text})
+        await broadcast_fn({"type": "jarvis_proactive", "message": response})
 
-    return text
+    return response
 
 
 # ── Proactive scheduler ───────────────────────────────────────────────────────
 
 _running = False
-_PROACTIVE_INTERVAL = 60   # seconds between checks
+_PROACTIVE_INTERVAL = 300   # seconds between checks (5 minutes)
+_STARTUP_DELAY      = 60    # seconds to wait after boot before first check
 
 
 async def run_proactive_scheduler(broadcast_fn=None) -> None:
     """Register as a FastAPI lifespan background task."""
     global _running
     _running = True
-    log.info("jarvis_scheduler_started")
+    log.info("jarvis_scheduler_started", first_check_in_seconds=_STARTUP_DELAY)
+
+    # Don't fire immediately on boot — wait for things to settle
+    await asyncio.sleep(_STARTUP_DELAY)
 
     while _running:
         try:

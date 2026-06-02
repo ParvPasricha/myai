@@ -6,15 +6,16 @@ Loaded once at import time; callers use get/set helpers.
 import json
 from pathlib import Path
 
-_CONFIG_PATH = Path(__file__).parent.parent / "models" / "jarvis_voice" / "config.json"
+_CONFIG_PATH    = Path(__file__).parent.parent / "models" / "jarvis_voice" / "config.json"
 _REFERENCE_CLIP = Path(__file__).parent.parent / "models" / "jarvis_voice" / "reference.wav"
 
+
 _DEFAULTS = {
-    "engine": "chatterbox",          # "chatterbox" | "edge"
-    "reference_clip": str(_REFERENCE_CLIP),
+    "engine": "chatterbox",
+    "reference_clip": str(_REFERENCE_CLIP),   # always the JARVIS sample
     "chatterbox": {
-        "exaggeration": 0.50,        # 0.25=flat → 0.75=expressive
-        "cfg_weight": 0.50,          # 0=ignore ref, 1=strict ref
+        "exaggeration": 0.50,
+        "cfg_weight": 0.75,          # higher adherence to reference clip
     },
     "edge": {
         "voice": "en-GB-RyanNeural",
@@ -23,8 +24,8 @@ _DEFAULTS = {
     },
     "effects": {
         "robotic": 0,                # 0–100: ring modulator depth
-        "warmth": 25,                # 0–100: reverb + low-shelf EQ
-        "emotion_intensity": 50,     # 0–100: dynamic range (0=compressed, 100=wide)
+        "warmth": 0,                 # 0–100: reverb + low-shelf EQ (0=clean/dry)
+        "emotion_intensity": 100,    # 0–100: dynamic range (100=wide/natural, no compression)
         "pitch_shift": 0,            # semitones: -6 to +6
         "tempo": 1.0,                # 0.75–1.5×
         "mood": "serious",           # "calm" | "serious" | "urgent" | "cheerful"

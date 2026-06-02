@@ -14,7 +14,7 @@ from pathlib import Path
 from observability.logger import log
 from server.config import OPENAI_API_KEY
 
-_WHISPER_MODEL_SIZE = "base.en"   # tiny.en / base.en / small.en / medium.en
+_WHISPER_MODEL_SIZE = "small.en"  # tiny.en / base.en / small.en / medium.en
 _WHISPER_MODEL_DIR  = Path(__file__).parent.parent / "models" / "whisper"
 
 
@@ -50,8 +50,18 @@ def transcribe(audio_bytes: bytes, fmt: str = "wav") -> str:
                 audio_path,
                 language="en",
                 beam_size=5,
-                vad_filter=True,          # skip silence automatically
-                vad_parameters={"min_silence_duration_ms": 500},
+                best_of=5,
+                temperature=0.0,          # greedy — more deterministic
+                vad_filter=True,
+                vad_parameters={
+                    "min_silence_duration_ms": 300,   # don't cut mid-word
+                    "speech_pad_ms": 200,             # keep a little padding around speech
+                    "threshold": 0.4,                 # less aggressive VAD
+                },
+                initial_prompt=(
+                    "Jarvis, sir, system, agent, research, plan, email, "
+                    "message, memory, project, code, deploy, status"
+                ),
             )
             transcript = " ".join(s.text.strip() for s in segments).strip()
             log.info("stt_transcribed_local", chars=len(transcript))

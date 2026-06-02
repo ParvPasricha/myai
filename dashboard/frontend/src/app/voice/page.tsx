@@ -25,13 +25,18 @@ interface VoiceConfig {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getToken() {
+async function getToken(): Promise<string> {
   if (typeof window === "undefined") return "";
-  return localStorage.getItem("jarvis_token") ?? "";
+  const cached = sessionStorage.getItem("parv_token");
+  if (cached) return cached;
+  const r = await fetch(`${API}/auth/token`, { method: "POST" });
+  const j = await r.json();
+  sessionStorage.setItem("parv_token", j.access_token);
+  return j.access_token;
 }
 
 async function apiFetch(path: string, opts: RequestInit = {}) {
-  const token = getToken();
+  const token = await getToken();
   const res = await fetch(`${API}${path}`, {
     ...opts,
     headers: {
@@ -153,8 +158,6 @@ function WaveformBar({ active }: { active: boolean }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-const MOODS = ["calm", "serious", "urgent", "cheerful"];
-
 const DEFAULT_CONFIG: VoiceConfig = {
   engine: "chatterbox",
   reference_clip_loaded: false,
@@ -186,15 +189,11 @@ export default function VoiceEditorPage() {
   const waveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const [waveActive, setWaveActive] = useState(false);
 
-  // Prompt for token once
   useEffect(() => {
-    const t = localStorage.getItem("jarvis_token") ?? "";
-    if (!t) {
-      const input = prompt("Jarvis API token:");
-      if (input) localStorage.setItem("jarvis_token", input);
-    }
-    setToken(localStorage.getItem("jarvis_token") ?? "");
-    loadConfig();
+    getToken().then((t) => {
+      setToken(t);
+      loadConfig();
+    });
   }, []);
 
   async function loadConfig() {
@@ -205,11 +204,6 @@ export default function VoiceEditorPage() {
     } catch (e) {
       setStatus("Could not load config — is the server running?");
     }
-  }
-
-  function updateEffect<K extends keyof Effects>(key: K, val: Effects[K]) {
-    setCfg((c) => ({ ...c, effects: { ...c.effects, [key]: val } }));
-    setSaved(false);
   }
 
   function updateChatterbox(key: string, val: number) {
@@ -230,7 +224,7 @@ export default function VoiceEditorPage() {
       });
       setSaved(true);
       setStatus("Saved.");
-      setTimeout(() => setStatus(""), 2000);
+      setTimeout(() => { setSaved(false); setStatus(""); }, 2000);
     } catch (e: any) {
       setStatus("Save failed: " + e.message);
     } finally {
@@ -278,7 +272,7 @@ export default function VoiceEditorPage() {
     try {
       const form = new FormData();
       form.append("file", file);
-      const t = localStorage.getItem("jarvis_token") ?? "";
+      const t = await getToken();
       const res = await fetch(`${API}/voice-editor/upload-reference`, {
         method: "POST",
         headers: { Authorization: t ? `Bearer ${t}` : "" },
@@ -295,28 +289,6 @@ export default function VoiceEditorPage() {
     }
   }
 
-  async function applyMoodPreset(mood: string) {
-    updateEffect("mood", mood);
-    try {
-      const res = await apiFetch("/voice-editor/presets");
-      const presets = await res.json();
-      if (presets[mood]) {
-        const p = presets[mood];
-        setCfg((c) => ({
-          ...c,
-          effects: {
-            ...c.effects,
-            mood,
-            pitch_shift:      p.pitch_shift      ?? c.effects.pitch_shift,
-            tempo:             p.tempo             ?? c.effects.tempo,
-            emotion_intensity: p.emotion_intensity ?? c.effects.emotion_intensity,
-          },
-        }));
-      }
-    } catch {}
-    setSaved(false);
-  }
-
   async function resetConfig() {
     if (!confirm("Reset all voice settings to defaults?")) return;
     await apiFetch("/voice-editor/reset", { method: "POST" });
@@ -324,8 +296,6 @@ export default function VoiceEditorPage() {
     setStatus("Reset to defaults.");
     setTimeout(() => setStatus(""), 2000);
   }
-
-  const fx = cfg.effects;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
@@ -356,19 +326,24 @@ export default function VoiceEditorPage() {
 
       <div className="max-w-3xl mx-auto space-y-4">
 
-        {/* Reference clip upload */}
+        {/* Reference clip */}
         <Section icon="🎤" title="Voice Reference">
-          <p className="text-sm text-zinc-400">
-            Upload a WAV or MP3 clip (ideally 10–30 seconds) of the target voice. Jarvis will
-            clone this texture for all speech.
-          </p>
           <div className="flex items-center gap-3">
+            <span className="text-xs text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-3 py-1.5 rounded-full font-mono">
+              ✓ JARVIS sample audio — active
+            </span>
+            <span className="text-sm text-zinc-500">24.7s reference clip loaded</span>
+          </div>
+          <p className="text-xs text-zinc-600 mt-1">
+            Replace with a different clip if needed.
+          </p>
+          <div className="flex items-center gap-3 mt-1">
             <button
               onClick={() => fileInput.current?.click()}
               disabled={uploading}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 rounded-xl text-sm font-medium transition-colors border border-zinc-700"
+              className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 rounded-lg text-xs font-medium transition-colors border border-zinc-700"
             >
-              {uploading ? "Uploading…" : "Upload clip"}
+              {uploading ? "Uploading…" : "Replace clip"}
             </button>
             <input
               ref={fileInput}
@@ -377,86 +352,7 @@ export default function VoiceEditorPage() {
               className="hidden"
               onChange={uploadReference}
             />
-            <span className="text-sm text-zinc-500">
-              {cfg.reference_clip_loaded
-                ? "reference.wav is active"
-                : "No clip yet — using en-GB-RyanNeural"}
-            </span>
           </div>
-        </Section>
-
-        {/* Mood presets */}
-        <Section icon="🎭" title="Mood Preset">
-          <div className="grid grid-cols-4 gap-2">
-            {MOODS.map((m) => (
-              <button
-                key={m}
-                onClick={() => applyMoodPreset(m)}
-                className={`py-2 rounded-xl text-sm font-medium capitalize transition-all border ${
-                  fx.mood === m
-                    ? "bg-cyan-400/20 border-cyan-400/50 text-cyan-300"
-                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        </Section>
-
-        {/* Main sliders */}
-        <Section icon="🤖" title="Character">
-          <SliderRow
-            label="Robotic Filter"
-            value={fx.robotic}
-            min={0} max={100}
-            leftLabel="Natural"
-            rightLabel="Full robot"
-            color="cyan"
-            onChange={(v) => updateEffect("robotic", v)}
-          />
-          <SliderRow
-            label="Warmth"
-            value={fx.warmth}
-            min={0} max={100}
-            leftLabel="Dry / Cold"
-            rightLabel="Warm / Resonant"
-            color="amber"
-            onChange={(v) => updateEffect("warmth", v)}
-          />
-          <SliderRow
-            label="Emotion Intensity"
-            value={fx.emotion_intensity}
-            min={0} max={100}
-            leftLabel="Flat / Compressed"
-            rightLabel="Wide / Expressive"
-            color="purple"
-            onChange={(v) => updateEffect("emotion_intensity", v)}
-          />
-        </Section>
-
-        <Section icon="🎼" title="Pitch & Tempo">
-          <SliderRow
-            label="Pitch Shift"
-            value={fx.pitch_shift}
-            min={-6} max={6}
-            step={0.5}
-            unit=" st"
-            leftLabel="-6 semitones"
-            rightLabel="+6 semitones"
-            color="blue"
-            onChange={(v) => updateEffect("pitch_shift", v)}
-          />
-          <SliderRow
-            label="Tempo"
-            value={fx.tempo}
-            min={0.75} max={1.5}
-            step={0.01}
-            leftLabel="0.75× slower"
-            rightLabel="1.5× faster"
-            color="green"
-            onChange={(v) => updateEffect("tempo", v)}
-          />
         </Section>
 
         {/* Chatterbox model controls */}

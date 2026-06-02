@@ -126,3 +126,38 @@ def speak_to_bytes(text: str) -> bytes:
 
 async def speak_to_bytes_async(text: str) -> bytes:
     return await asyncio.to_thread(speak_to_bytes, text)
+
+
+# ── Fast real-time TTS (edge-tts — <500ms, used for voice WebSocket) ──────────
+
+async def speak_fast(text: str) -> bytes:
+    """
+    Edge-TTS direct path — skips Chatterbox entirely.
+
+    Returns MP3 bytes in < 500ms. Used for real-time voice responses
+    so the user isn't waiting 30 seconds for Chatterbox diffusion.
+    Chatterbox is kept for voice editor previews where latency doesn't matter.
+    """
+    if not text or not text.strip():
+        return b""
+    try:
+        import edge_tts, tempfile
+        from intelligence.voice_config import get_config
+        cfg      = get_config()
+        edge_cfg = cfg.get("edge", {})
+        voice    = edge_cfg.get("voice", "en-GB-RyanNeural")
+        rate     = edge_cfg.get("rate", "-5%")
+        pitch    = edge_cfg.get("pitch", "-10Hz")
+
+        tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+        tmp.close()
+        comm = edge_tts.Communicate(text, voice=voice, rate=rate, pitch=pitch)
+        await comm.save(tmp.name)
+        data = __import__("pathlib").Path(tmp.name).read_bytes()
+        __import__("pathlib").Path(tmp.name).unlink(missing_ok=True)
+        log.info("tts_fast", chars=len(text), bytes=len(data))
+        return data
+    except Exception as e:
+        log.warn("tts_fast_failed", error=str(e))
+        # fallback: mac say → aiff (still fast)
+        return await speak_to_bytes_async(text)

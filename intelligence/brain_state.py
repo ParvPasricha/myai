@@ -15,17 +15,19 @@ from server.config import REDIS_URL
 _REDIS_KEY = "parv:brain_state"
 
 _DEFAULT: dict = {
-    "focus": 5,
-    "energy": 5,
-    "stress": 3,
+    "focus": None,              # measured by sensors — null until read
+    "energy": None,
+    "stress": None,
+    "mood": None,
+    "emotion": None,
     "deep_work": False,
     "social_mode": False,
     "learning_mode": None,
     "security_state": "armed",
-    "current_activity": "idle",
-    "location": "unknown",
-    "mic_stage": "push_to_talk",
-    "brainwave": None,          # populated in Phase 12
+    "current_activity": None,   # null until activity detected
+    "location": None,           # null until set
+    "mic_stage": "always_on",
+    "brainwave": None,          # Phase 12 — Muse S EEG
     "last_updated": None,
 }
 
